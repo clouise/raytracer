@@ -1,6 +1,7 @@
 using StaticArrays
 using BenchmarkTools
 using Printf
+using LinearAlgebra
 import Base.push!
 
 global inc = 0
@@ -9,6 +10,7 @@ svec = SVector{4, Float64}
 trans = SMatrix{4, 4, Float64}
 vec3 = SVector{3, Float64}
 
+#Define translation matrices for moving objects in 3d space
 function translation(x, y, z)
     i = SA_F64[1 0 0 x; 0 1 0 y; 0 0 1 z; 0 0 0 1]
     return(i)
@@ -48,13 +50,18 @@ function position(r::ray, t)
     return(r.origin + r.direction * t)
 end
 
-struct sphere
+mutable struct sphere
     id::Int
+    transform::SArray
+end
+
+function setTransform(s::sphere, m::SArray)
+    s.transform = m
 end
 
 function sphere()
     global inc += 1
-    return(sphere(inc))
+    return(sphere(inc, SA_F64[1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]))
 end
 
 struct intersection
@@ -72,10 +79,18 @@ function push!(is::intersections, i::intersection)
     is.count += 1
 end
 
+function transform(r::ray, m::SArray)
+    ro = m * r.origin
+    rd = m * r.direction
+    return(ray(ro, rd))
+end
+
+
 function intersect(sphere::sphere, r::ray)
-    sphereToRay = r.origin - point(0, 0, 0)
-    a = dot(r.direction, r.direction)
-    b = 2 * dot(r.direction, sphereToRay)
+    tRay = transform(r, inv(sphere.transform))
+    sphereToRay = tRay.origin - point(0, 0, 0)
+    a = dot(tRay.direction, tRay.direction)
+    b = 2 * dot(tRay.direction, sphereToRay)
     c = dot(sphereToRay, sphereToRay) - 1
     discriminant = b^2 - 4 * a * c
     if discriminant < 0.0
@@ -148,23 +163,12 @@ magnitude(a::svec) = sqrt(sum(x^2 for x in a))
 normalise(a::svec) = a / magnitude(a)
 intersections() = intersections(0, Vector{intersection}())
 intersection(t::Float64, s::sphere) = intersection(t, s.id)
-
+intersection(t::Int, s::sphere) = intersection(Float64(t), s.id)
 canvas(width, height) = canvas(width, height, zeros(Int, width, height, 3))
 
-width = 500
-height = 500
-c = canvas(width, height)
-
-#canvasToPPM(c, "test.ppm")
-for i in 1:12
-    p = point(0, 0, 1)
-    p = rotationY(i * pi / 6) * p
-    p = p * 3/8 * width
-    writePixel(c, Int(round(p[3])) + div(width, 2),
-               Int(round(p[1])) + div(width, 2), color(1, 1, 1))
+function hit(is::intersections)
+    if length(is.array[Bool[x.t >= 0.0 for x in is.array]]) == 0
+        return()
+    end
+    return(sort(is.array[Bool[x.t >= 0.0 for x in is.array]], by = v -> v.t)[1])
 end
-
-
-c.pixels
-
-canvasToPPM(c, "test.ppm")
