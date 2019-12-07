@@ -1,3 +1,9 @@
+using StaticArrays
+using BenchmarkTools
+using Printf
+using LinearAlgebra
+import Base.push!
+
 include("./raytracer/raytracer.jl")
 
 # Test writing a circle to a ppm file
@@ -17,16 +23,30 @@ c.pixels
 
 canvasToPPM(c, "test.ppm")
 
+# Ray trace a sphere
+rayOrigin = point(0, 0, -5)
+wallZ = 10
+wallSize = 7.0
+canvasPixels = 500
+pixelSize = wallSize / canvasPixels
+half = wallSize / 2
 
-# Generate a collection of intersections
-s = sphere()
-i1 = intersection(5, s)
-i2 = intersection(7, s)
-i3 = intersection(-3, s)
-i4 = intersection(2, s)
+c = canvas(canvasPixels, canvasPixels)
+col = color(1, 0, 0) # red
+shape = sphere()
+shape.transform = scaling(1, 0.5, 1)
 
-xs = intersections(4, [i1, i2, i3, i4])
+@inbounds for y in 1:canvasPixels
+    worldY = half - pixelSize * y
+    @inbounds for x in 1:canvasPixels
+        worldX = -half + pixelSize * x
+        posit = point(worldX, worldY, wallZ)
+        r = ray(rayOrigin, normalise(posit - rayOrigin))
+        xs = intersect(shape, r)
+        if hit(xs) != ()
+            writePixel(c, x, y, col)
+        end
+    end
+end
 
-hit(xs)
-
-
+canvasToPPM(c, "circle.ppm")

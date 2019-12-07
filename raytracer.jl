@@ -1,9 +1,3 @@
-using StaticArrays
-using BenchmarkTools
-using Printf
-using LinearAlgebra
-import Base.push!
-
 global inc = 0
 
 svec = SVector{4, Float64}
@@ -64,6 +58,19 @@ function sphere()
     return(sphere(inc, SA_F64[1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1]))
 end
 
+
+function normal_at(sphere::sphere, point::svec)
+    # first we convert from the world point
+    # to the point in object space by inversing the transform
+    object_point = inverse(sphere.transform) * point
+    object_normal = object_point - point(0, 0, 0)
+    # to return back to world space we have to transpose after taking the inverse?
+    # TODO: figure out why
+    world_normal = transpose(inverse(sphere.transform)) * object_normal
+    world_normal.w = 0
+    return normalize(world_normal)
+end
+
 struct intersection
     t::Float64
     object::Int
@@ -94,12 +101,11 @@ function intersect(sphere::sphere, r::ray)
     c = dot(sphereToRay, sphereToRay) - 1
     discriminant = b^2 - 4 * a * c
     if discriminant < 0.0
-        return()
+        return(intersections(0, []))
     end
     t1 = (-b - sqrt(discriminant)) / (2 * a)
     t2 = (-b + sqrt(discriminant)) / (2 * a)
     return(intersections(2, [intersection(t1, sphere.id), intersection(t2, sphere.id)]))
-    #return(sphere.id, (t1, t2))
 end
 
 struct projectile
@@ -134,8 +140,8 @@ function canvasToPPM(canvas, filename::AbstractString)
     io = open(filename, "w")
     header = @sprintf("P3\n%s %s\n255\n", canvas.width, canvas.height)
     write(io, header)
-    for j in 1:canvas.height
-        for i in 1:canvas.width
+    @inbounds for j in 1:canvas.height
+        @inbounds for i in 1:canvas.width
             for k in 1:3
                 write(io, string(canvas.pixels[i, j, k]), " ")
             end
