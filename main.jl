@@ -5,6 +5,9 @@ using LinearAlgebra
 import Base.push!
 
 include("./raytracer/raytracer.jl")
+include("./raytracer/canvas.jl")
+include("./raytracer/transformations.jl")
+include("./raytracer/rays.jl")
 
 # Test writing a circle to a ppm file
 width = 500
