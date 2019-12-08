@@ -1,4 +1,4 @@
-mutable struct canvas
+mutable struct Canvas
     width::UInt
     height::UInt
     pixels::Array{Any}
@@ -8,9 +8,9 @@ function writePixel(canvas, x, y, color)
     canvas.pixels[x, y, :] = color
 end
 
-canvas(width, height) = canvas(width, height, zeros(Int, width, height, 3))
+Canvas(width, height) = Canvas(width, height, zeros(Int, width, height, 3))
 
-function canvasToPPM(canvas, filename::AbstractString)
+function canvasToPPM(canvas::Canvas, filename::AbstractString)
     clamp!(c.pixels, 0, 1)
     c.pixels = map(x -> Int(round((x - 0) / (1 - 0) * (255 - 0) + 0)), c.pixels)
     io = open(filename, "w")
