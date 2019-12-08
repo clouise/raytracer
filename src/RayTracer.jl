@@ -1,7 +1,14 @@
 module RayTracer
 
-export vector
-export magnitude
+export point, vector, color, magnitude, normalise
+export Canvas, writePixel, canvasToPPM
+export Intersection, Intersections, push!, hit, reflect
+export PointLight
+export Material, lighting
+export Ray, transform, position, intersect
+export Sphere, setTransform, normal_at
+export translation, scaling, rotationX, rotationY, rotationZ, shearing
+
 
 using StaticArrays
 using BenchmarkTools
