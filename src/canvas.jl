@@ -11,10 +11,10 @@ end
 Canvas(width, height) = Canvas(width, height, zeros(Int, width, height, 3))
 
 function canvasToPPM(canvas::Canvas, filename::AbstractString)
-    clamp!(c.pixels, 0, 1)
-    c.pixels = map(x -> Int(round((x - 0) / (1 - 0) * (255 - 0) + 0)), c.pixels)
+    clamp!(canvas.pixels, 0, 1)
+    canvas.pixels = map(x -> Int(round((x - 0) / (1 - 0) * (255 - 0) + 0)), canvas.pixels)
     io = open(filename, "w")
-    header = @sprintf("P3\n%s %s\n255\n", canvas.width, canvas.height)
+    header = "P3\n" * string(canvas.width) * " " * string(canvas.height) * "\n255\n"
     write(io, header)
     @inbounds for j in 1:canvas.height
         @inbounds for i in 1:canvas.width

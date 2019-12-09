@@ -14,7 +14,7 @@ function position(r::Ray, t)
 end
 
 function intersect(sphere::Sphere, r::Ray)
-    tRay = transform(r, inv(sphere.transform))
+    tRay = transform(r, sphere.invtransform)
     sphereToRay = tRay.origin - point(0, 0, 0)
     a = dot(tRay.direction, tRay.direction)
     b = 2 * dot(tRay.direction, sphereToRay)
