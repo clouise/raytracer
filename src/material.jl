@@ -20,9 +20,18 @@ Material() = Material(defaultcolor, defaultambient,
 
 function lighting(material::Material, light::PointLight,
                   point::svec, eyev::svec, normalv::svec)
+    ### Implements the Phong reflection model
+    ### https://en.wikipedia.org/wiki/Phong_reflection_model
+
+    # combine the material color with light intensity
     effective_color = material.color .* light.intensity
-    lightv = normalise(light.position - point) # compute the ambient contribution
+    # find the direction to the light source
+    lightv = normalise(light.position - point)
+    # compute the ambient contribution
     ambient = effective_color * material.ambient
+    # light_dot_normal represents the cosine between the light vector and the
+    # normal vector. a negative number means the light
+    # is on the other side of the surface
     light_dot_normal = dot(lightv, normalv)
     if light_dot_normal < 0
         diffuse = color(0, 0, 0)

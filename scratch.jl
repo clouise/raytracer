@@ -1,4 +1,5 @@
 using Pkg
+using BenchmarkTools
 
 Pkg.activate("RayTracer")
 
@@ -19,7 +20,6 @@ c = Canvas(canvasPixels, canvasPixels)
 sphere = Sphere()
 sphere.material = Material()
 sphere.material.color = color(1, 0.2, 1)
-#sphere.transform = shearing(0, 0, 0, 0, 0, 0) * scaling(1, .65, 1)
 
 light_position = point(-10, 10, -10)
 light_color = color(1, 1, 1)
@@ -43,4 +43,7 @@ light = PointLight(light_position, light_color)
     end
 end
 
-canvasToPPM(c, "123.ppm")
+
+@benchmark render()
+
+canvasToPPM(c, "./raytracer/123.ppm")
